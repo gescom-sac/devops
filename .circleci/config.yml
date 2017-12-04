@@ -43,4 +43,58 @@ jobs:
           key: v1-dependencies-{{ checksum "composer.json" }}
       - run:
          name: run test unit
-         command: vendor/bin/phpunit --bootstrap Email.php --testdox tests  
+         command: vendor/bin/phpunit --bootstrap Email.php --testdox tests
+  test:
+    docker:
+      # specify the version you desire here
+      - image: circleci/php:5.6.30-apache
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/mysql:9.4
+    working_directory:  /var/www/html
+    steps:
+      - run:
+          name: chmod permissions
+          command: sudo chown -R circleci:circleci /var/www/html
+      - checkout
+      - run:
+          name: chmod permissions
+          command: sudo chown -R circleci:www-data /var/www/html && chmod -R g+sw /var/www/html      
+      - run:
+          name: Install curl
+          command: sudo apt-get install curl
+
+      - run:
+          name: Install getcomposer
+          command: sudo php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+
+      - run:
+          name: Move the composer.phar
+          command: sudo php composer-setup.php
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "composer.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run: /var/www/html/composer.phar install --dev --no-interaction
+      - save_cache:
+          paths:
+            - ./vendor
+          key: v1-dependencies-{{ checksum "composer.json" }}
+      - run:
+         name: run test unit
+         command: vendor/bin/phpunit --bootstrap Email.php --testdox tests
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
+         

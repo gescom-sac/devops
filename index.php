@@ -7,15 +7,19 @@ use \Psr\Http\Message\ResponseInterface as Response;
 use Kachkaev\PHPR\RCore;
 use Kachkaev\PHPR\Engine\CommandLineREngine;
 
+$config = [
+    'settings' => [
+        'displayErrorDetails' => true,
+    ],
+];
 
-$app = new \Slim\App;
+$app = new \Slim\App($config);
 $app->get('/hello/{name}', 'index');
 $app->run();
 
 
 function  index (Request $request, Response $response) {
     $name = $request->getAttribute('name');
-    
 
 	//$args = array();
 	//$args['pathToErrorFile'] = 'D:/error.txt';
@@ -26,8 +30,12 @@ function  index (Request $request, Response $response) {
 	$result = $r->run('a = 1
 	b = 2
 	a + b',true);
-	
+	//$response->withHeader('Content-Type','application/json');
 	//$response->getBody()->write("Hello, $result");
+	
+	//$data = array('name' => 'Bob', 'age' => 40);
+	//$newResponse = $response->withJson($data);
+
     //return $response;
 	return $result[0];
 };
